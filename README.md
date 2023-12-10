@@ -1,2 +1,2 @@
-# nft-place
-NFT marketplace on the Ethereum blockchain
+# NFT Place
+A NFT marketplace on the Ethereum blockchain.
