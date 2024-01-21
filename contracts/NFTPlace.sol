@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 error NFTPlace__NotOwner();
 error NFTPlace__InvalidPrice();
@@ -16,6 +16,8 @@ contract NFTPlace {
         uint256 id; // listing id
         address collection;
         uint256 tokenId;
+        string tokenURI;
+        string name;
         address seller;
         uint256 price;
         bool sold;
@@ -44,7 +46,7 @@ contract NFTPlace {
         if (price <= 0)
             revert NFTPlace__InvalidPrice();
 
-        IERC721 collection = IERC721(collectionAddress);
+        ERC721 collection = ERC721(collectionAddress);
         if(msg.sender != collection.ownerOf(tokenId))
             revert NFTPlace__NotOwner();
 
@@ -54,7 +56,9 @@ contract NFTPlace {
         if (collection.getApproved(tokenId) != address(this))
             revert NFTPlace__NFTNotApproved();
         
-        Listing memory listing = Listing(++listingCounter, collectionAddress, tokenId, msg.sender, price, false, false);
+        string memory tokenURI = collection.tokenURI(tokenId);
+        string memory name = collection.name();
+        Listing memory listing = Listing(++listingCounter, collectionAddress, tokenId, tokenURI, name, msg.sender, price, false, false);
         listings.push(listing);
         activeListings[collectionAddress][tokenId] = listing;
     }
@@ -94,11 +98,11 @@ contract NFTPlace {
         if (msg.value < listing.price)
             revert NFTPlace__PriceNotMet();
         
+        ERC721(collectionAddress).safeTransferFrom(listing.seller, msg.sender, tokenId);
+        balances[listing.seller] += msg.value;
+        
         delete (activeListings[collectionAddress][tokenId]);
         listings[listing.id - 1].sold = true;
-
-        IERC721(collectionAddress).safeTransferFrom(listing.seller, msg.sender, tokenId);
-        balances[listing.seller] += msg.value;
     }
 
     function withdrawFunds() external {

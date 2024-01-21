@@ -1,22 +1,28 @@
 import { ethers } from "hardhat";
+import { parseEther } from "ethers/lib/utils";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  // Deploy NFT Place
+  let nftPlaceFactory = await ethers.getContractFactory("NFTPlace");
+  console.log("Deploying NFTPlace...")
+  let nftPlace = await nftPlaceFactory.deploy();
+  await nftPlace.deployed();
+  console.log(`Deployed contract to: ${nftPlace.address}`);
 
-  const lockedAmount = ethers.parseEther("0.001");
+  // Deploy NFT collection
+  let testNFTFactory = await ethers.getContractFactory("TestNFT");
+  console.log("Deploying test NFT...")
+  let nft = await testNFTFactory.deploy();
+  await nft.deployed();
+  console.log(`Deployed contract to: ${nft.address}`);
 
-  const lock = await ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
-
-  await lock.waitForDeployment();
-
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  // List some nfts
+  console.log("Listing NFTs...");
+  for(let i = 0; i < 30; i++){
+    await nft.approve(nftPlace.address, i);
+    await nftPlace.listNFT(nft.address, i, parseEther("2"));
+  }
+  console.log("NFTs listed...");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
