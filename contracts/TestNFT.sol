@@ -4,8 +4,10 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract TestNFT is ERC721 {
+    uint256 private counter;
+
     constructor() ERC721("TestNFT", "TN") {
-        uint256 counter = 0;
+        counter = 0;
         for(uint256 i = 0; i < 32; i++){
             _safeMint(msg.sender, counter++);
         }
